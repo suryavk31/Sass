@@ -1,0 +1,27 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --custom-color: #000000; /* Adjust this color based on your needs */
+}
+
+.text-custom {
+  color: var(--custom-color);
+}
+
+.bg-custom {
+  background-color: var(--custom-color);
+}
+
+.focus\:ring-custom:focus {
+  --tw-ring-color: var(--custom-color);
+}
+
+.focus\:border-custom:focus {
+  border-color: var(--custom-color);
+}

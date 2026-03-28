@@ -1,5 +1,5 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 @tailwind base;
@@ -7,7 +7,47 @@
 @tailwind utilities;
 
 :root {
-  --custom-color: #000000; /* Adjust this color based on your needs */
+  --brand-color: #7b68ee;
+  /* ClickUp Purple */
+  --brand-light: #eeebff;
+  --bg-main: #f8fafc;
+  --sidebar-bg: #ffffff;
+  --sidebar-dark: #2b3440;
+  --text-main: #2a2e34;
+  --text-muted: #7c828d;
+  --border-light: #e9ebf0;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-slate-200/60 shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .glass-sidebar {
+    @apply bg-white border-r border-slate-200 shadow-sidebar;
+  }
+
+  .premium-gradient {
+    @apply bg-gradient-to-r from-[#7b68ee] to-[#9281ff];
+  }
+
+  .hover-scale {
+    @apply transition-all duration-200 hover:translate-y-[-1px] active:scale-[0.98];
+  }
+
+  .nav-active {
+    @apply bg-[#eeebff] text-[#7b68ee] font-semibold;
+  }
+
+  .sidebar-item {
+    @apply flex items-center px-3 py-1.5 text-[13px] text-slate-600 hover:bg-slate-100/80 rounded-md transition-colors cursor-pointer;
+  }
 }
 
 .text-custom {
@@ -24,4 +64,45 @@
 
 .focus\:border-custom:focus {
   border-color: var(--custom-color);
+}
+
+/* Compact UI Overrides */
+.table-compact th,
+.table-compact td {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  font-size: 0.8125rem !important;
+}
+
+.card-compact {
+  padding: 0.75rem !important;
+  border-radius: 0.375rem !important;
+}
+
+/* Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(123, 104, 238, 0.2);
+}
+
+.thin-scrollbar::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
 }

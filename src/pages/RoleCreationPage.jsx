@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { createRole } from "../actions/roleActions";
 import { useNavigate } from "react-router-dom";
 import RoleForm from "../components/role/RoleForm";
+import toast from 'react-hot-toast';
 
 const RoleCreationPage = () => {
   const dispatch = useDispatch();
@@ -15,7 +16,8 @@ const RoleCreationPage = () => {
     setErrorMessage(null); // Clear previous errors
     try {
       await dispatch(createRole(roleData));
-      navigate("/roles"); // Redirect to roles list on success
+      toast.success("Role created successfully!");
+      navigate("/roles");
     } catch (error) {
       setErrorMessage(error.message); // Display error on failure
     } finally {

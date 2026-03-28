@@ -14,7 +14,16 @@ const RoleForm = ({ onSubmit, isSubmitting }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ roleName, permissions });
+    // Convert permissions object { moduleName: { Create: bool, Edit: bool, ... } }
+    // to backend structure: [ { module: "moduleName", create: bool, edit: bool, view: bool, delete: bool } ]
+    const permissionsArray = Object.keys(permissions).map(moduleName => ({
+      module: moduleName,
+      create: !!permissions[moduleName]?.Create,
+      edit: !!permissions[moduleName]?.Edit,
+      delete: !!permissions[moduleName]?.Delete,
+      view: !!permissions[moduleName]?.View,
+    }));
+    onSubmit({ name: roleName, permissions: permissionsArray });
   };
 
   return (
@@ -39,11 +48,10 @@ const RoleForm = ({ onSubmit, isSubmitting }) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium text-white ${
-            isSubmitting
-              ? "bg-gray-400"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+          className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium text-white ${isSubmitting
+            ? "bg-gray-400"
+            : "bg-indigo-600 hover:bg-indigo-700"
+            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
         >
           {isSubmitting ? "Saving..." : "Save Role"}
         </button>

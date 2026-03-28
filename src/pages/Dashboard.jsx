@@ -3,11 +3,7 @@ import React from 'react';
 import DashboardContent from '../components/dashboard/DashboardContent';
 
 const Dashboard = () => {
-  return (
-    <div className="p-6">
-       <DashboardContent />
-    </div>
-  );
+  return <DashboardContent />;
 };
 
 export default Dashboard;

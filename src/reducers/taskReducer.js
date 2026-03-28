@@ -35,15 +35,17 @@ import {
         return {
           ...state,
           loading: false,
-          tasks: state.tasks.map((task) =>
-            task._id === action.payload._id ? action.payload : task
-          ),
+          tasks: state.tasks.map((task) => {
+            const taskId = task._id || task.id;
+            const payloadId = action.payload._id || action.payload.id;
+            return (taskId && payloadId && taskId === payloadId) ? action.payload : task;
+          }),
         };
       case TASK_DELETE_SUCCESS:
         return {
           ...state,
           loading: false,
-          tasks: state.tasks.filter((task) => task._id !== action.payload),
+          tasks: state.tasks.filter((task) => (task._id !== action.payload && task.id !== action.payload)),
         };
       case TASK_LIST_FAIL:
       case TASK_CREATE_FAIL:

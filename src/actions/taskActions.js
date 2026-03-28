@@ -1,5 +1,5 @@
-// src/redux/actions/taskActions.js
-import axios from 'axios';
+// src/actions/taskActions.js
+import api from '../utils/axiosInstance';
 import {
   TASK_LIST_REQUEST,
   TASK_LIST_SUCCESS,
@@ -15,87 +15,46 @@ import {
   TASK_DELETE_FAIL,
 } from '../constants/taskConstants';
 
-export const listTasks = (projectId) => async (dispatch, getState) => {
+export const listTasks = (projectId, parentId = null) => async (dispatch) => {
   try {
     dispatch({ type: TASK_LIST_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { Authorization: `Bearer ${userInfo.token}` },
-      params: { project: projectId },
-    };
-    const { data } = await axios.get('/api/tasks', config);
+    const params = { project: projectId, all: 'true' };
+    if (parentId) params.parentId = parentId;
+    
+    const { data } = await api.get('/api/tasks', { params });
     dispatch({ type: TASK_LIST_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: TASK_LIST_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: TASK_LIST_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const createTask = (taskData) => async (dispatch, getState) => {
+
+export const createTask = (taskData) => async (dispatch) => {
   try {
     dispatch({ type: TASK_CREATE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-    const { data } = await axios.post('/api/tasks', taskData, config);
+    const { data } = await api.post('/api/tasks', taskData);
     dispatch({ type: TASK_CREATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: TASK_CREATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: TASK_CREATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const updateTask = (taskId, updateData) => async (dispatch, getState) => {
+export const updateTask = (taskId, updateData) => async (dispatch) => {
   try {
     dispatch({ type: TASK_UPDATE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-    const { data } = await axios.put(`/api/tasks/${taskId}`, updateData, config);
+    const { data } = await api.put(`/api/tasks/${taskId}`, updateData);
     dispatch({ type: TASK_UPDATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: TASK_UPDATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: TASK_UPDATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const deleteTask = (taskId) => async (dispatch, getState) => {
+export const deleteTask = (taskId) => async (dispatch) => {
   try {
     dispatch({ type: TASK_DELETE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userInfo.token}`,
-      },
-    };
-    await axios.delete(`/api/tasks/${taskId}`, config);
+    await api.delete(`/api/tasks/${taskId}`);
     dispatch({ type: TASK_DELETE_SUCCESS, payload: taskId });
   } catch (error) {
-    dispatch({
-      type: TASK_DELETE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: TASK_DELETE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };

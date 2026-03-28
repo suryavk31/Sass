@@ -38,15 +38,20 @@ import {
         return {
           ...state,
           loading: false,
-          employees: state.employees.map((emp) =>
-            emp._id === action.payload._id ? action.payload : emp
-          ),
+          employees: state.employees.map((emp) => {
+            const empId = emp._id || emp.id;
+            const payloadId = action.payload._id || action.payload.id;
+            return (empId === payloadId) ? action.payload : emp;
+          }),
         };
       case EMPLOYEE_DELETE_SUCCESS:
         return {
           ...state,
           loading: false,
-          employees: state.employees.filter((emp) => emp._id !== action.payload),
+          employees: state.employees.filter((emp) => {
+             const empId = emp._id || emp.id;
+             return empId !== action.payload;
+          }),
         };
       case EMPLOYEE_ADD_TASK_RECORD_SUCCESS:
         return { ...state, loading: false }; // Optionally update a specific employee record

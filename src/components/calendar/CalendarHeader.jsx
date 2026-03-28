@@ -1,34 +1,81 @@
-// src/components/calendar/CalendarHeader.jsx
+// src/components/calendar/CalendarHeader.jsx — Premium Redesign
 import React from 'react';
+import {
+    ChevronLeftRounded,
+    ChevronRightRounded,
+    TodayRounded,
+    AddRounded,
+    CalendarMonthRounded
+} from '@mui/icons-material';
 
-const CalendarHeader = ({ currentMonth, onPrevious, onNext, onToday, view, onViewChange }) => {
-  return (
-    <div className="p-6 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center mb-6">
-      <div className="flex items-center space-x-4">
-        <button onClick={onPrevious} className="p-2 hover:bg-gray-100 rounded-full">
-          <i className="fas fa-chevron-left text-gray-600"></i>
-        </button>
-        <h2 className="text-xl font-semibold">{currentMonth}</h2>
-        <button onClick={onNext} className="p-2 hover:bg-gray-100 rounded-full">
-          <i className="fas fa-chevron-right text-gray-600"></i>
-        </button>
-      </div>
-      <div className="flex items-center space-x-3 mt-4 md:mt-0">
-        <button onClick={onToday} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-sm font-medium rounded">
-          Today
-        </button>
-        <select
-          value={view}
-          onChange={(e) => onViewChange(e.target.value)}
-          className="bg-white border border-gray-300 text-sm px-3 py-2 pr-8 rounded appearance-none focus:ring-custom focus:border-custom"
-        >
-          <option value="month">Month</option>
-          <option value="week">Week</option>
-          <option value="day">Day</option>
-        </select>
-      </div>
-    </div>
-  );
+const VIEWS = ['month', 'week', 'day'];
+
+const CalendarHeader = ({ currentMonth, onPrevious, onNext, onToday, view, onViewChange, onAddEvent }) => {
+    return (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            {/* Left — Month + Nav */}
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#7b68ee]/10 flex items-center justify-center">
+                    <CalendarMonthRounded sx={{ fontSize: 20, color: '#7b68ee' }} />
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={onPrevious}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:border-[#7b68ee] hover:text-[#7b68ee] transition-all shadow-sm"
+                    >
+                        <ChevronLeftRounded sx={{ fontSize: 18 }} />
+                    </button>
+                    <h2 className="text-[22px] font-black text-slate-800 tracking-tight min-w-[200px] text-center">
+                        {currentMonth}
+                    </h2>
+                    <button
+                        onClick={onNext}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:border-[#7b68ee] hover:text-[#7b68ee] transition-all shadow-sm"
+                    >
+                        <ChevronRightRounded sx={{ fontSize: 18 }} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Right — Controls */}
+            <div className="flex items-center gap-3">
+                {/* Today */}
+                <button
+                    onClick={onToday}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 hover:border-[#7b68ee] hover:text-[#7b68ee] transition-all shadow-sm"
+                >
+                    <TodayRounded sx={{ fontSize: 16 }} />
+                    Today
+                </button>
+
+                {/* View Toggle */}
+                <div className="flex bg-slate-100 rounded-xl p-1 gap-0.5">
+                    {VIEWS.map(v => (
+                        <button
+                            key={v}
+                            onClick={() => onViewChange(v)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                                view === v
+                                    ? 'bg-white text-[#7b68ee] shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-700'
+                            }`}
+                        >
+                            {v}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Add Event */}
+                <button
+                    onClick={onAddEvent}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#7b68ee] to-[#5b4fc4] text-white text-sm font-black shadow-lg shadow-[#7b68ee]/30 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                    <AddRounded sx={{ fontSize: 18 }} />
+                    New Event
+                </button>
+            </div>
+        </div>
+    );
 };
 
 export default CalendarHeader;

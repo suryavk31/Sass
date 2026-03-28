@@ -1,4 +1,5 @@
-import axiosInstance from "../utils/api";
+// src/actions/roleActions.js
+import api from '../utils/axiosInstance';
 import {
   ROLE_LIST_REQUEST,
   ROLE_LIST_SUCCESS,
@@ -12,64 +13,44 @@ import {
   ROLE_DELETE_REQUEST,
   ROLE_DELETE_SUCCESS,
   ROLE_DELETE_FAIL,
-} from "../constants/roleConstants";
+} from '../constants/roleConstants';
 
-export const listRoles = () => async (dispatch, getState) => {
+export const listRoles = () => async (dispatch) => {
   try {
     dispatch({ type: ROLE_LIST_REQUEST });
-    const { user: { userInfo } } = getState();
-    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-    const { data } = await axiosInstance.get("/roles", config);
+    const { data } = await api.get('/api/roles'); // Note: added /api/ prefix to match typical backend routes
     dispatch({ type: ROLE_LIST_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: ROLE_LIST_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: ROLE_LIST_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const createRole = (roleData) => async (dispatch, getState) => {
+export const createRole = (roleData) => async (dispatch) => {
   try {
     dispatch({ type: ROLE_CREATE_REQUEST });
-    const { user: { userInfo } } = getState();
-    const config = { headers: { "Content-Type": "application/json", Authorization: `Bearer ${userInfo.token}` } };
-    const { data } = await axiosInstance.post("/roles", roleData, config);
+    const { data } = await api.post('/api/roles', roleData);
     dispatch({ type: ROLE_CREATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: ROLE_CREATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: ROLE_CREATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const updateRole = (id, roleData) => async (dispatch, getState) => {
+export const updateRole = (id, roleData) => async (dispatch) => {
   try {
     dispatch({ type: ROLE_UPDATE_REQUEST });
-    const { user: { userInfo } } = getState();
-    const config = { headers: { "Content-Type": "application/json", Authorization: `Bearer ${userInfo.token}` } };
-    const { data } = await axiosInstance.put(`/roles/${id}`, roleData, config);
+    const { data } = await api.put(`/api/roles/${id}`, roleData);
     dispatch({ type: ROLE_UPDATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: ROLE_UPDATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: ROLE_UPDATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-export const deleteRole = (id) => async (dispatch, getState) => {
+export const deleteRole = (id) => async (dispatch) => {
   try {
     dispatch({ type: ROLE_DELETE_REQUEST });
-    const { user: { userInfo } } = getState();
-    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-    await axiosInstance.delete(`/roles/${id}`, config);
+    await api.delete(`/api/roles/${id}`);
     dispatch({ type: ROLE_DELETE_SUCCESS, payload: id });
   } catch (error) {
-    dispatch({
-      type: ROLE_DELETE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: ROLE_DELETE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };

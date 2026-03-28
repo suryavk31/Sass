@@ -1,4 +1,5 @@
-import axios from "axios";
+// src/actions/projectActions.js
+import api from '../utils/axiosInstance';
 import {
   PROJECT_LIST_REQUEST,
   PROJECT_LIST_SUCCESS,
@@ -6,19 +7,12 @@ import {
   PROJECT_CREATE_REQUEST,
   PROJECT_CREATE_SUCCESS,
   PROJECT_CREATE_FAIL,
-} from "../constants/projectConstants";
+} from '../constants/projectConstants';
 
-export const listProjects = (workspaceId) => async (dispatch, getState) => {
+export const listProjects = (workspaceId) => async (dispatch) => {
   try {
     dispatch({ type: PROJECT_LIST_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { Authorization: `Bearer ${userInfo.token}` },
-      params: { workspace: workspaceId },
-    };
-    const { data } = await axios.get("/api/projects", config);
+    const { data } = await api.get('/api/projects', { params: { workspace: workspaceId } });
     dispatch({ type: PROJECT_LIST_SUCCESS, payload: data });
   } catch (error) {
     dispatch({
@@ -28,16 +22,10 @@ export const listProjects = (workspaceId) => async (dispatch, getState) => {
   }
 };
 
-export const createProject = (name, workspace) => async (dispatch, getState) => {
+export const createProject = (name, workspace) => async (dispatch) => {
   try {
     dispatch({ type: PROJECT_CREATE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${userInfo.token}` },
-    };
-    const { data } = await axios.post("/api/projects/create", { name, workspace }, config);
+    const { data } = await api.post('/api/projects/create', { name, workspace });
     dispatch({ type: PROJECT_CREATE_SUCCESS, payload: data });
   } catch (error) {
     dispatch({

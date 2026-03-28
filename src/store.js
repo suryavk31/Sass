@@ -8,6 +8,8 @@ import { taskReducer } from './reducers/taskReducer';
 import { calendarReducer } from "./reducers/calendarReducer";
 import { employeeReducer } from "./reducers/employeeReducer";
 import { roleReducer } from './reducers/roleReducer';
+import { statsReducer } from './reducers/statsReducer';
+import { auditListReducer } from './reducers/auditReducer';
 
 const reducer = combineReducers({
   user: authReducer,
@@ -17,6 +19,8 @@ const reducer = combineReducers({
   calendar: calendarReducer,
   employee: employeeReducer,
   role: roleReducer,
+  stats: statsReducer,
+  audit: auditListReducer,
 });
 
 const middleware = [thunk];

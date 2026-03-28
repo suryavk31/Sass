@@ -1,0 +1,238 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useSelector, useDispatch } from 'react-redux';
+import { listWorkspaces } from '../actions/workspaceActions';
+import toast from 'react-hot-toast';
+
+const SalaryCalculationPage = () => {
+    const dispatch = useDispatch();
+    const [employees, setEmployees] = useState([]);
+    
+    // View modes: list, configure, calculate
+    const [viewMode, setViewMode] = useState('list');
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    
+    // Config form
+    const [baseSalary, setBaseSalary] = useState(0);
+    const [allowances, setAllowances] = useState([]);
+    const [deductions, setDeductions] = useState([]);
+    
+    // Calculation
+    const [calcMonth, setCalcMonth] = useState(new Date().getMonth() + 1); // 1-12
+    const [calcYear, setCalcYear] = useState(new Date().getFullYear());
+    const [payrollResult, setPayrollResult] = useState(null);
+
+    const workspaceList = useSelector((state) => state.workspace);
+    const { workspaces } = workspaceList;
+    const [currentWorkspaceId, setCurrentWorkspaceId] = useState('');
+
+    const token = localStorage.getItem('token');
+    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+
+    useEffect(() => {
+        dispatch(listWorkspaces());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (currentWorkspaceId) {
+            fetchEmployees();
+        } else if (workspaces && workspaces.length > 0) {
+            setCurrentWorkspaceId(workspaces[0]._id);
+        }
+    }, [workspaces, currentWorkspaceId]);
+
+    const fetchEmployees = async () => {
+        try {
+            const { data } = await axios.get('/api/employees', authConfig);
+            setEmployees(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleConfigure = async (emp) => {
+        setSelectedEmployee(emp);
+        setViewMode('configure');
+        try {
+            const { data } = await axios.get(`/api/hr/salary-structure?employeeId=${emp.id}`, authConfig);
+            setBaseSalary(data.baseSalary || 0);
+            setAllowances(data.allowances || []);
+            setDeductions(data.deductions || []);
+        } catch(error) {
+            console.error("Failed to fetch structure", error);
+        }
+    };
+
+    const handleSaveStructure = async () => {
+        try {
+            await axios.post('/api/hr/salary-structure', {
+                employeeId: selectedEmployee.id,
+                workspaceId: currentWorkspaceId,
+                baseSalary,
+                allowances,
+                deductions
+            }, authConfig);
+            toast.success("Structure saved successfully!");
+            setViewMode('list');
+        } catch(error) {
+            toast.error("Failed to save structure");
+            console.error(error);
+        }
+    };
+
+    const handleCalculate = (emp) => {
+        setSelectedEmployee(emp);
+        setPayrollResult(null);
+        setViewMode('calculate');
+    };
+
+    const runPayroll = async () => {
+        try {
+            const { data } = await axios.post('/api/hr/calculate-payroll', {
+                employeeId: selectedEmployee.id,
+                month: calcMonth,
+                year: calcYear,
+                workspaceId: currentWorkspaceId
+            }, authConfig);
+            setPayrollResult(data);
+        } catch(error) {
+            console.error(error);
+            toast.error("Calculation failed. Make sure employee has salary structure.");
+        }
+    };
+
+    return (
+        <div className="flex-1 bg-slate-50 flex flex-col min-w-0 h-full overflow-hidden p-8">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-2xl font-black text-slate-900">Payroll Calculation</h1>
+                    <p className="text-slate-500 text-sm">Configure salary structures and calculate monthly payouts.</p>
+                </div>
+                {viewMode !== 'list' && (
+                    <button 
+                        onClick={() => setViewMode('list')}
+                        className="bg-white border text-sm border-slate-200 rounded-xl px-4 py-2 text-slate-700 font-bold hover:bg-slate-50"
+                    >
+                        Back to List
+                    </button>
+                )}
+            </div>
+
+            <div className="flex-1 overflow-auto">
+                {viewMode === 'list' && (
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b border-slate-100 text-xs text-slate-400 font-black uppercase tracking-wider">
+                                    <th className="pb-4">Employee Name</th>
+                                    <th className="pb-4">Position</th>
+                                    <th className="pb-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {employees.map((emp) => (
+                                    <tr key={emp.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                        <td className="py-4 font-bold text-slate-800 text-sm">{emp.name}</td>
+                                        <td className="py-4 text-slate-500 text-sm">{emp.position}</td>
+                                        <td className="py-4 text-right">
+                                            <button 
+                                                onClick={() => handleConfigure(emp)}
+                                                className="mr-3 text-xs bg-[#7b68ee]/10 text-[#7b68ee] px-3 py-1.5 rounded-lg font-bold hover:bg-[#7b68ee]/20 transition-colors"
+                                            >
+                                                Configure Structure
+                                            </button>
+                                            <button 
+                                                onClick={() => handleCalculate(emp)}
+                                                className="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-200 transition-colors"
+                                            >
+                                                Calculate Payroll
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {viewMode === 'configure' && (
+                    <div className="bg-white w-[500px] max-w-full mx-auto border border-slate-200 rounded-3xl p-8 shadow-sm">
+                        <h2 className="text-xl font-black text-slate-900 mb-6">Structure for {selectedEmployee?.name}</h2>
+                        
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Base Salary ($)</label>
+                                <input 
+                                    type="number" 
+                                    value={baseSalary}
+                                    onChange={(e) => setBaseSalary(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#7b68ee]/30 focus:border-[#7b68ee] outline-none"
+                                />
+                            </div>
+
+                            {/* Simplified Allowances and deductions for demo */}
+                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <p className="text-xs text-slate-500 font-medium italic">Note: Advanced dynamic allowances & deductions are supported via API but simplified UI here. Use backend API for JSON arrays.</p>
+                            </div>
+
+                            <button 
+                                onClick={handleSaveStructure}
+                                className="w-full bg-[#7b68ee] text-white px-4 py-3 rounded-xl font-bold shadow-md shadow-[#7b68ee]/20 hover:bg-[#6c58e0] transition-colors"
+                            >
+                                Save Structure
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {viewMode === 'calculate' && (
+                    <div className="bg-white w-[500px] max-w-full mx-auto border border-slate-200 rounded-3xl p-8 shadow-sm">
+                        <h2 className="text-xl font-black text-slate-900 mb-6">Run Payroll for {selectedEmployee?.name}</h2>
+                        <div className="flex gap-4 mb-6">
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Month (1-12)</label>
+                                <input 
+                                    type="number" min="1" max="12"
+                                    value={calcMonth} onChange={e => setCalcMonth(e.target.value)}
+                                    className="w-full bg-slate-50 border rounded-xl px-4 py-2 text-sm font-bold outline-none border-slate-200 focus:border-[#7b68ee]"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Year</label>
+                                <input 
+                                    type="number"
+                                    value={calcYear} onChange={e => setCalcYear(e.target.value)}
+                                    className="w-full bg-slate-50 border rounded-xl px-4 py-2 text-sm font-bold outline-none border-slate-200 focus:border-[#7b68ee]"
+                                />
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={runPayroll}
+                            className="w-full bg-emerald-500 text-white px-4 py-3 rounded-xl font-bold shadow-md shadow-emerald-500/20 hover:bg-emerald-600 transition-colors mb-6"
+                        >
+                            Generate Calculation
+                        </button>
+
+                        {payrollResult && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm">
+                                <h3 className="font-black text-slate-800 text-lg mb-4 text-center">Salary Slip Summary</h3>
+                                <div className="space-y-2 font-medium text-slate-600 pb-4 border-b border-slate-200">
+                                    <div className="flex justify-between"><span>Base Salary:</span> <span className="font-bold text-slate-900">${parseFloat(payrollResult.baseSalary).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span>Total Days:</span> <span className="font-bold text-slate-900">{payrollResult.totalDays}</span></div>
+                                    <div className="flex justify-between"><span>Present Days:</span> <span className="font-bold text-slate-900">{payrollResult.presentDays}</span></div>
+                                </div>
+                                <div className="flex justify-between mt-4 text-lg">
+                                    <span className="font-bold text-slate-500">Net Calculated:</span> 
+                                    <span className="font-black text-[#7b68ee]">${parseFloat(payrollResult.calculatedSalary).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default SalaryCalculationPage;

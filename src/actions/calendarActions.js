@@ -1,4 +1,5 @@
-import axios from "axios";
+// src/actions/calendarActions.js
+import api from '../utils/axiosInstance';
 import {
   CALENDAR_LIST_REQUEST,
   CALENDAR_LIST_SUCCESS,
@@ -12,84 +13,44 @@ import {
   CALENDAR_DELETE_REQUEST,
   CALENDAR_DELETE_SUCCESS,
   CALENDAR_DELETE_FAIL,
-} from "../constants/calendarConstants";
+} from '../constants/calendarConstants';
 
-// List calendar events for the logged-in user
-export const listCalendarEvents = () => async (dispatch, getState) => {
+export const listCalendarEvents = (workspaceId) => async (dispatch) => {
   try {
     dispatch({ type: CALENDAR_LIST_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { Authorization: `Bearer ${userInfo.token}` },
-    };
-    const { data } = await axios.get("/api/calendar", config);
+    const { data } = await api.get(`/api/calendar?workspaceId=${workspaceId}`);
     dispatch({ type: CALENDAR_LIST_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: CALENDAR_LIST_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: CALENDAR_LIST_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-// Create a new calendar event
-export const createCalendarEvent = (eventData) => async (dispatch, getState) => {
+export const createCalendarEvent = (eventData) => async (dispatch) => {
   try {
     dispatch({ type: CALENDAR_CREATE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${userInfo.token}` },
-    };
-    const { data } = await axios.post("/api/calendar", eventData, config);
+    const { data } = await api.post('/api/calendar', eventData);
     dispatch({ type: CALENDAR_CREATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: CALENDAR_CREATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: CALENDAR_CREATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-// Update an existing calendar event
-export const updateCalendarEvent = (id, eventData) => async (dispatch, getState) => {
+export const updateCalendarEvent = (id, eventData) => async (dispatch) => {
   try {
     dispatch({ type: CALENDAR_UPDATE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${userInfo.token}` },
-    };
-    const { data } = await axios.put(`/api/calendar/${id}`, eventData, config);
+    const { data } = await api.put(`/api/calendar/${id}`, eventData);
     dispatch({ type: CALENDAR_UPDATE_SUCCESS, payload: data });
   } catch (error) {
-    dispatch({
-      type: CALENDAR_UPDATE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: CALENDAR_UPDATE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };
 
-// Delete a calendar event
-export const deleteCalendarEvent = (id) => async (dispatch, getState) => {
+export const deleteCalendarEvent = (id) => async (dispatch) => {
   try {
     dispatch({ type: CALENDAR_DELETE_REQUEST });
-    const {
-      user: { userInfo },
-    } = getState();
-    const config = {
-      headers: { Authorization: `Bearer ${userInfo.token}` },
-    };
-    await axios.delete(`/api/calendar/${id}`, config);
+    await api.delete(`/api/calendar/${id}`);
     dispatch({ type: CALENDAR_DELETE_SUCCESS, payload: id });
   } catch (error) {
-    dispatch({
-      type: CALENDAR_DELETE_FAIL,
-      payload: error.response?.data?.message || error.message,
-    });
+    dispatch({ type: CALENDAR_DELETE_FAIL, payload: error.response?.data?.message || error.message });
   }
 };

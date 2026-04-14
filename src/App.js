@@ -63,7 +63,7 @@ function App() {
         <Route path="/payment-cancel" element={<PaymentCancelPage />} />
         <Route path="/invite/:token" element={<InvitePage />} />
 
-        {/* Nested routes under the dashboard layout */}
+        {/* Nested routes under the dashboard layouts */}
         <Route
           path="/:userId"
           element={
@@ -88,12 +88,12 @@ function App() {
           <Route path="invoices" element={<PrivateRoute requiredModule="sales"><InvoicePage /></PrivateRoute>} />
           <Route path="leave-expenses" element={<PrivateRoute requiredModule="hr"><LeaveAndExpensePage /></PrivateRoute>} />
           <Route path="hr-dashboard" element={<PrivateRoute requiredModule="hr"><HRDashboardPage /></PrivateRoute>} />
-          
+
           {/* Placeholder Routes for sidebars */}
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="spaces" element={<ProjectPage />} />
           <Route path="dashboards" element={<DashboardsPage />} />
-          
+
           {/* Reports Routes */}
           <Route path="reports/sales" element={<SalesReportsPage />} />
           <Route path="reports/employee" element={<EmployeeReportsPage />} />
@@ -106,7 +106,7 @@ function App() {
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="pipeline" element={<PrivateRoute requiredModule="sales"><SalesPipelinePage /></PrivateRoute>} />
           <Route path="sales-dashboard" element={<PrivateRoute requiredModule="sales"><SalesDashboard /></PrivateRoute>} />
-          
+
           {/* Additional child routes */}
         </Route>
       </Routes>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector } from 'react-redux';
 import { 
     TrendingUpRounded, 
@@ -24,9 +24,9 @@ const SalesDashboard = () => {
     const isAdmin = userRole?.roleName === 'Admin';
     const permissions = userRole?.permissions || [];
 
-    const userId = localStorage.getItem('userId');
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    const { userInfo } = useSelector(state => state.user || {});
+    const userId = userInfo?.id;
+    // authConfig is handled automatically by axiosInstance interceptors.
 
     useEffect(() => {
         if (currentWorkspaceId) {
@@ -39,9 +39,9 @@ const SalesDashboard = () => {
         try {
             const period = new Date().toISOString().substring(0,7);
             const [statsRes, lbRes, dealsRes] = await Promise.all([
-                axios.get(`/api/sales/stats?workspaceId=${currentWorkspaceId}&userId=${userId}&period=${period}`, authConfig),
-                axios.get(`/api/sales/leaderboard?workspaceId=${currentWorkspaceId}`, authConfig),
-                axios.get(`/api/sales/filtered-deals?workspaceId=${currentWorkspaceId}&startDate=${filters.startDate}&endDate=${filters.endDate}&status=${filters.status}&salesType=${filters.salesType}`, authConfig)
+                axios.get(`/api/sales/stats?workspaceId=${currentWorkspaceId}&userId=${userId}&period=${period}`),
+                axios.get(`/api/sales/leaderboard?workspaceId=${currentWorkspaceId}`),
+                axios.get(`/api/sales/filtered-deals?workspaceId=${currentWorkspaceId}&startDate=${filters.startDate}&endDate=${filters.endDate}&status=${filters.status}&salesType=${filters.salesType}`)
             ]);
             setStats(statsRes.data);
             setLeaderboard(lbRes.data);
@@ -61,7 +61,9 @@ const SalesDashboard = () => {
                 period: targetForm.period,
                 revenueTarget: targetForm.revenueTarget,
                 dealCountTarget: targetForm.dealCountTarget
-            }, authConfig);
+            }, {
+                params: { workspaceId: currentWorkspaceId }
+            });
             alert("Target updated successfully!");
             fetchData();
         } catch (error) {
@@ -81,7 +83,7 @@ const SalesDashboard = () => {
                         <TrendingUpRounded sx={{fontSize: 18}} />
                         <span className="text-xs font-bold uppercase tracking-widest">Total Revenue</span>
                     </div>
-                    <div className="text-3xl font-black text-[#7b68ee]">${stats.totalRevenue?.toLocaleString() || 0}</div>
+                    <div className="text-3xl font-black text-[#7b68ee]">₹{stats.totalRevenue?.toLocaleString() || 0}</div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center gap-2 text-slate-500 mb-2">
@@ -103,7 +105,7 @@ const SalesDashboard = () => {
                         <span className="text-xs font-bold uppercase tracking-widest">Target Achievement</span>
                     </div>
                     <div className="text-3xl font-black text-blue-500">{stats.targetAchievement?.toFixed(1) || 0}%</div>
-                    {stats.target && <div className="text-xs font-bold text-slate-400 mt-1">Goal: ${stats.target.revenueTarget}</div>}
+                    {stats.target && <div className="text-xs font-bold text-slate-400 mt-1">Goal: ₹{stats.target.revenueTarget}</div>}
                 </div>
             </div>
 
@@ -122,7 +124,7 @@ const SalesDashboard = () => {
                                     </div>
                                     <div className="text-sm font-bold text-slate-700">{entry.user.firstName} {entry.user.lastName}</div>
                                 </div>
-                                <div className="text-sm font-black text-[#7b68ee]">${entry.revenue.toLocaleString()}</div>
+                                <div className="text-sm font-black text-[#7b68ee]">₹{entry.revenue.toLocaleString()}</div>
                             </div>
                         ))}
                         {leaderboard.length === 0 && <div className="text-sm text-slate-400 font-medium text-center py-4">No won deals yet.</div>}
@@ -138,7 +140,7 @@ const SalesDashboard = () => {
                                 <h2 className="text-lg font-black text-slate-800 mb-4">Set Monthly Target</h2>
                                 <form onSubmit={handleSetTarget} className="space-y-3">
                                     <input type="month" value={targetForm.period} onChange={e => setTargetForm({...targetForm, period: e.target.value})} className="w-full text-sm font-bold text-slate-700 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none focus:border-[#7b68ee]" />
-                                    <input type="number" placeholder="Revenue Target ($)" value={targetForm.revenueTarget} onChange={e => setTargetForm({...targetForm, revenueTarget: e.target.value})} className="w-full text-sm font-bold text-slate-700 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none focus:border-[#7b68ee]" />
+                                    <input type="number" placeholder="Revenue Target (₹)" value={targetForm.revenueTarget} onChange={e => setTargetForm({...targetForm, revenueTarget: e.target.value})} className="w-full text-sm font-bold text-slate-700 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 outline-none focus:border-[#7b68ee]" />
                                     <button type="submit" className="w-full bg-[#7b68ee] text-white font-bold text-sm py-2 rounded-lg hover:bg-purple-600 transition-colors">Save Target</button>
                                 </form>
                             </div>
@@ -186,7 +188,7 @@ const SalesDashboard = () => {
                             {deals.map(deal => (
                                 <tr key={deal.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-6 py-4 text-sm font-bold text-slate-800">{deal.title}</td>
-                                    <td className="px-6 py-4 text-sm font-black text-[#7b68ee]">${parseFloat(deal.value).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-sm font-black text-[#7b68ee]">₹{parseFloat(deal.value).toLocaleString()}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-[10px] font-bold ${deal.status === 'Won' ? 'bg-emerald-100 text-emerald-700' : deal.status === 'Lost' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>
                                             {deal.status}

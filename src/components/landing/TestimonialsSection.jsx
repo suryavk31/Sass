@@ -8,14 +8,14 @@ const testimonials = [
     title: "Product Engineering at AlphaTech",
     image: "https://creatie.ai/ai/api/search-image?query=A%20professional%20headshot%20of%20a%20confident%20female%20business%20executive",
     testimonial:
-      "TaskFlow has revolutionized how our team manages projects. The intuitive interface and real-time syncing have slashed our delivery times by 30%.",
+      "Bivith has revolutionized how our team manages projects. The intuitive interface and real-time syncing have slashed our delivery times by 30%.",
   },
   {
     name: "Michael Chen",
     title: "Engineering Director at ScaleUp",
     image: "https://creatie.ai/ai/api/search-image?query=A%20professional%20headshot%20of%20a%20middle-aged%20male%20business%20professional",
     testimonial:
-      "The immutable audit logs and SOC2 compliance features made TaskFlow the only choice for our enterprise-grade project management needs.",
+      "The immutable audit logs and SOC2 compliance features made Bivith the only choice for our enterprise-grade project management needs.",
   },
   {
     name: "Emma Wilson",

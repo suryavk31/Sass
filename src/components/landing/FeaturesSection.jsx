@@ -43,7 +43,7 @@ const FeaturesSection = () => {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-brand-600 font-bold uppercase tracking-[0.2em] text-sm mb-4">Core Infrastructure</h2>
           <h3 className="text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">Built for scale, engineered for precision.</h3>
-          <p className="text-slate-500 text-lg font-medium leading-relaxed">Unlike generic tools, TaskFlow provides the mission-critical systems your enterprise needs to ship faster and stay compliant.</p>
+          <p className="text-slate-500 text-lg font-medium leading-relaxed">Unlike generic tools, Bivith provides the mission-critical systems your enterprise needs to ship faster and stay compliant.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">

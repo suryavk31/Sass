@@ -3,10 +3,13 @@ import React from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
+import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
 const localizer = momentLocalizer(moment);
+const DnDCalendar = withDragAndDrop(Calendar);
 
-const CalendarView = ({ events, view, date, onNavigate, onView }) => {
+const CalendarView = ({ events, view, date, onNavigate, onView, onEventDrop }) => {
     return (
         <div className="premium-calendar flex-1 min-h-0" style={{ height: 'calc(100vh - 200px)' }}>
             <style>{`
@@ -162,7 +165,7 @@ const CalendarView = ({ events, view, date, onNavigate, onView }) => {
                     letter-spacing: 0.1em;
                 }
             `}</style>
-            <Calendar
+            <DnDCalendar
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
@@ -171,6 +174,14 @@ const CalendarView = ({ events, view, date, onNavigate, onView }) => {
                 date={date}
                 onNavigate={onNavigate}
                 onView={onView}
+                onEventDrop={onEventDrop}
+                draggableAccessor="draggable"
+                eventPropGetter={(event) => {
+                    let backgroundColor = '#7b68ee'; // Default Meeting
+                    if (event.sourceType === 'TASK') backgroundColor = '#f59e0b';
+                    if (event.sourceType === 'DEAL') backgroundColor = '#10b981';
+                    return { style: { backgroundColor } };
+                }}
                 style={{ height: '100%' }}
                 step={30}
                 timeslots={2}

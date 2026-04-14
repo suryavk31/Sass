@@ -18,10 +18,11 @@ import {
   EMPLOYEE_ADD_TASK_RECORD_FAIL,
 } from '../constants/employeeConstants';
 
-export const listEmployees = () => async (dispatch) => {
+export const listEmployees = (workspaceId) => async (dispatch) => {
   try {
     dispatch({ type: EMPLOYEE_LIST_REQUEST });
-    const { data } = await api.get('/api/employees');
+    const url = workspaceId ? `/api/employees?workspaceId=${workspaceId}` : '/api/employees';
+    const { data } = await api.get(url);
     dispatch({ type: EMPLOYEE_LIST_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: EMPLOYEE_LIST_FAIL, payload: error.response?.data?.message || error.message });

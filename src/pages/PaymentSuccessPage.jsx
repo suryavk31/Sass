@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircleRounded } from '@mui/icons-material';
-import axios from 'axios';
 
 const PaymentSuccessPage = () => {
     const navigate = useNavigate();

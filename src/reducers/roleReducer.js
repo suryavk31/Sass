@@ -35,14 +35,14 @@ const initialState = {
           ...state,
           loading: false,
           roles: state.roles.map((role) =>
-            role._id === action.payload._id ? action.payload : role
+            role.id === action.payload.id ? action.payload : role
           ),
         };
       case ROLE_DELETE_SUCCESS:
         return {
           ...state,
           loading: false,
-          roles: state.roles.filter((role) => role._id !== action.payload),
+          roles: state.roles.filter((role) => role.id !== action.payload),
         };
       case ROLE_LIST_FAIL:
       case ROLE_CREATE_FAIL:

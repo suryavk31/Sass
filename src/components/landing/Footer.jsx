@@ -15,10 +15,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-16 lg:gap-24 mb-20">
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-8 group">
-              <div className="w-10 h-10 premium-gradient rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <RocketLaunchRounded className="text-white text-xl" />
-              </div>
-              <span className="text-2xl font-black text-white tracking-tighter">TaskFlow</span>
+              <img src="/logo.jpeg" alt="Bivith" className="h-12 w-auto object-contain group-hover:scale-105 transition-transform" />
             </Link>
             <p className="text-slate-500 font-medium leading-relaxed mb-8">
               The high-density workspace for teams who demand precision, speed, and absolute reliability.
@@ -81,7 +78,7 @@ const Footer = () => {
 
         <div className="border-t border-slate-900 pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-slate-600 font-bold text-sm tracking-tight">
-            &copy; {new Date().getFullYear()} TaskFlow Intelligence Systems. Built with precision.
+            &copy; {new Date().getFullYear()} Bivith. Built with precision.
           </p>
           <div className="flex gap-8">
             {['Privacy Policy', 'Terms of Service', 'Security'].map((item) => (

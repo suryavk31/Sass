@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import toast from 'react-hot-toast';
@@ -17,8 +17,7 @@ const AttendancePage = () => {
     const { workspaces } = workspaceList;
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState('');
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is handled automatically by axiosInstance.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -35,8 +34,9 @@ const AttendancePage = () => {
     }, [workspaces, currentWorkspaceId, selectedDate]);
 
     const fetchEmployees = async () => {
+        if (!currentWorkspaceId || currentWorkspaceId === 'undefined') return;
         try {
-            const { data } = await axios.get('/api/employees', authConfig);
+            const { data } = await axios.get(`/api/employees?workspaceId=${currentWorkspaceId}`);
             setEmployees(data);
         } catch (error) {
             console.error(error);
@@ -44,11 +44,11 @@ const AttendancePage = () => {
     };
 
     const fetchAttendance = async () => {
+        if (!currentWorkspaceId || currentWorkspaceId === 'undefined') return;
         setLoading(true);
         try {
             const { data } = await axios.get(
-                `/api/hr/attendance?workspaceId=${currentWorkspaceId}&startDate=${selectedDate}&endDate=${selectedDate}`, 
-                authConfig
+                `/api/hr/attendance?workspaceId=${currentWorkspaceId}&startDate=${selectedDate}&endDate=${selectedDate}`
             );
             setAttendanceList(data);
         } catch(error) {
@@ -64,7 +64,7 @@ const AttendancePage = () => {
                 date: selectedDate,
                 status,
                 workspaceId: currentWorkspaceId
-            }, authConfig);
+            });
             fetchAttendance();
         } catch (error) {
             console.error(error);

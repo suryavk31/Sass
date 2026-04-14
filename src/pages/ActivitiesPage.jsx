@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import { AddRounded, PhoneRounded, EmailRounded, SupportAgentRounded, DescriptionRounded, CheckCircleRounded, RadioButtonUncheckedRounded } from '@mui/icons-material';
@@ -16,8 +16,7 @@ const ActivitiesPage = () => {
     const { workspaces } = workspaceList;
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState('');
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is handled automatically by axiosInstance.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -33,9 +32,10 @@ const ActivitiesPage = () => {
     }, [workspaces, currentWorkspaceId]);
 
     const fetchActivities = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
-            const { data } = await axios.get(`/api/activities?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/activities?workspaceId=${workspaceId}`);
             setActivities(data);
         } catch (error) {
             console.error(error);
@@ -50,7 +50,7 @@ const ActivitiesPage = () => {
             await axios.post('/api/activities', {
                 ...formData,
                 workspaceId: currentWorkspaceId
-            }, authConfig);
+            });
             fetchActivities(currentWorkspaceId);
             setShowModal(false);
             setFormData({ type: 'Call', title: '', description: '', dueDate: '', isCompleted: false });
@@ -63,7 +63,7 @@ const ActivitiesPage = () => {
         try {
             await axios.put(`/api/activities/${activity.id}`, {
                 isCompleted: !activity.isCompleted
-            }, authConfig);
+            });
             fetchActivities(currentWorkspaceId);
         } catch (error) {
             console.error(error);

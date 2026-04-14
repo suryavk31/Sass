@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { listWorkspaces } from '../actions/workspaceActions';
-import { AddRounded, EditRounded, DeleteRounded, EuroRounded, MoreVertRounded, AssignmentIndRounded } from '@mui/icons-material';
+import { AddRounded, EditRounded, DeleteRounded, EuroRounded, MoreVertRounded, AssignmentIndRounded, ReceiptLongRounded } from '@mui/icons-material';
 import toast from 'react-hot-toast';
 import socket from '../socket';
+import ActivityTimeline from '../components/dashboard/ActivityTimeline';
 
 const SalesPipelinePage = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { userInfo } = useSelector((state) => state.user || {});
+    const userId = userInfo?.id;
     const [pipelines, setPipelines] = useState([]);
     const [selectedPipeline, setSelectedPipeline] = useState(null);
     const [loading, setLoading] = useState(false);
     
-    // Add deal modal
     const [showDealModal, setShowDealModal] = useState(false);
     const [newDeal, setNewDeal] = useState({ title: '', value: 0, stageId: '', closingDate: '', salesType: '', notes: '' });
 
     // Add pipeline modal
     const [showPipelineModal, setShowPipelineModal] = useState(false);
     const [newPipelineName, setNewPipelineName] = useState('');
-    const [newPipelineFields, setNewPipelineFields] = useState([]); // [{name: 'VIN', type: 'text'}]
+    const [newPipelineFields, setNewPipelineFields] = useState([]);
 
-    // Generate Invoice modal
-    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-    const [invoiceData, setInvoiceData] = useState({ dealId: '', amount: 0, dueDate: '' });
+    // Timeline State
+    const [timelineDeal, setTimelineDeal] = useState(null);
 
     const workspaceList = useSelector((state) => state.workspace);
     const { workspaces } = workspaceList;
     
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState('');
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // Centralized authConfig is now handled automatically by axiosInstance
+    // No need for manual token extraction here.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -61,9 +64,10 @@ const SalesPipelinePage = () => {
     }, [workspaces, currentWorkspaceId]);
 
     const fetchPipelines = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
-            const { data } = await axios.get(`/api/sales/pipelines?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/sales/pipelines?workspaceId=${workspaceId}`);
             setPipelines(data);
             if (data.length > 0 && !selectedPipeline) {
                 setSelectedPipeline(data[0]);
@@ -84,7 +88,7 @@ const SalesPipelinePage = () => {
                 name: newPipelineName, 
                 workspaceId: currentWorkspaceId,
                 customFields: newPipelineFields
-            }, authConfig);
+            });
             const updatedPipelines = [...pipelines, data];
             setPipelines(updatedPipelines);
             setSelectedPipeline(data);
@@ -116,7 +120,7 @@ const SalesPipelinePage = () => {
                 customData,
                 pipelineId: selectedPipeline.id,
                 workspaceId: currentWorkspaceId
-            }, authConfig);
+            });
             fetchPipelines(currentWorkspaceId);
             setShowDealModal(false);
             setNewDeal({ title: '', value: 0, stageId: '', closingDate: '', salesType: '', notes: '' });
@@ -162,7 +166,7 @@ const SalesPipelinePage = () => {
                 setSelectedPipeline(updatedPipeline);
                 
                 try {
-                    await axios.put(`/api/sales/deals/${dealId}`, { stageId }, authConfig);
+                    await axios.put(`/api/sales/deals/${dealId}`, { stageId });
                 } catch (error) {
                     console.error("Failed to update deal stage", error);
                     toast.error("Failed to update deal stage");
@@ -175,18 +179,9 @@ const SalesPipelinePage = () => {
         }
     };
 
-    const handleCreateInvoice = async () => {
-        try {
-            await axios.post('/api/invoices', {
-                ...invoiceData,
-                workspaceId: currentWorkspaceId
-            }, authConfig);
-            toast.success('Invoice Generated Successfully!');
-            setShowInvoiceModal(false);
-        } catch(error) {
-            console.error(error);
-            toast.error('Failed to generate invoice.');
-        }
+    const handleGenerateInvoice = (deal) => {
+        // Navigate to invoices page with deal pre-selected
+        navigate(`/${userId}/invoices`, { state: { dealId: deal.id } });
     };
 
     return (
@@ -270,12 +265,16 @@ const SalesPipelinePage = () => {
                                     >
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-bold text-slate-800 text-sm leading-tight">{deal.title}</h4>
-                                            <button className="text-slate-300 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setTimelineDeal(deal); }}
+                                                className="text-slate-300 hover:text-[#7b68ee] bg-slate-50 hover:bg-[#7b68ee]/10 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all"
+                                                title="View History"
+                                            >
                                                 <MoreVertRounded sx={{ fontSize: 16 }} />
                                             </button>
                                         </div>
                                         <div className="text-[#6c58e0] font-black text-lg tracking-tight mb-3">
-                                            ${parseFloat(deal.value).toLocaleString()}
+                                            ₹{parseFloat(deal.value).toLocaleString()}
                                         </div>
                                         <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
                                             <div className="flex items-center gap-1">
@@ -296,12 +295,12 @@ const SalesPipelinePage = () => {
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setInvoiceData({ dealId: deal.id, amount: deal.value, dueDate: '' });
-                                                    setShowInvoiceModal(true);
+                                                    handleGenerateInvoice(deal);
                                                 }}
-                                                className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                                                className="flex items-center gap-1 text-[10px] font-bold bg-[#7b68ee]/10 text-[#7b68ee] px-2.5 py-1 rounded-lg hover:bg-[#7b68ee]/20 transition-colors"
                                             >
-                                                Generate Invoice
+                                                <ReceiptLongRounded sx={{ fontSize: 12 }} />
+                                                Invoice
                                             </button>
                                         </div>
                                     </div>
@@ -357,7 +356,7 @@ const SalesPipelinePage = () => {
                                 <div>
                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">Deal Value</label>
                                     <div className="relative">
-                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">$</span>
+                                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">₹</span>
                                         <input
                                             type="number"
                                             value={newDeal.value}
@@ -528,50 +527,17 @@ const SalesPipelinePage = () => {
                 </div>
             )}
 
-            {/* Generate Invoice Modal */}
-            {showInvoiceModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
-                    <div className="bg-white rounded-3xl p-8 w-[400px] shadow-2xl">
-                        <h2 className="text-xl font-black text-slate-900 mb-6">Generate Invoice</h2>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Amount ($)</label>
-                                <input 
-                                    type="number" 
-                                    value={invoiceData.amount}
-                                    onChange={(e) => setInvoiceData({...invoiceData, amount: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Due Date</label>
-                                <input 
-                                    type="date" 
-                                    value={invoiceData.dueDate}
-                                    onChange={(e) => setInvoiceData({...invoiceData, dueDate: e.target.value})}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end gap-3 mt-8">
-                            <button 
-                                onClick={() => setShowInvoiceModal(false)}
-                                className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleCreateInvoice}
-                                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 transition-all"
-                            >
-                                Generate
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {/* Global Timeline Overlay */}
+            {timelineDeal && (
+                <ActivityTimeline 
+                    entityType="Deal" 
+                    entityId={timelineDeal.id} 
+                    entityName={timelineDeal.title} 
+                    workspaceId={currentWorkspaceId}
+                    onClose={() => setTimelineDeal(null)} 
+                />
             )}
+
         </div>
     );
 };

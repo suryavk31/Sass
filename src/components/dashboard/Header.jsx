@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import axios from '../../utils/axiosInstance';
 import socket from '../../socket';
 import {
   SearchRounded,
@@ -18,6 +18,7 @@ const Header = () => {
   const dropdownRef = useRef(null);
   const { projectId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const { workspaces } = useSelector((state) => state.workspace);
   const { projects } = useSelector((state) => state.project);
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -39,8 +40,7 @@ const Header = () => {
     pageTitle = 'Settings';
   }
 
-  const token = localStorage.getItem('token');
-  const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+  // authConfig is handled automatically by axiosInstance.
 
   // Fetch notifications
   useEffect(() => {
@@ -51,7 +51,7 @@ const Header = () => {
 
     const fetchNotifications = async () => {
       try {
-        const { data } = await axios.get('/api/notifications', authConfig);
+        const { data } = await axios.get('/api/notifications');
         setNotifications(data);
       } catch (error) {
         console.error("Failed to fetch notifications");
@@ -83,7 +83,7 @@ const Header = () => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put('/api/notifications/mark-all-read', {}, authConfig);
+      await axios.put('/api/notifications/mark-all-read', {});
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (error) {
       console.error(error);
@@ -92,7 +92,7 @@ const Header = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.put(`/api/notifications/${id}/read`, {}, authConfig);
+      await axios.put(`/api/notifications/${id}/read`, {});
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (error) {
       console.error(error);
@@ -177,6 +177,16 @@ const Header = () => {
                           <p className="text-[13px] font-bold">You're all caught up!</p>
                         </div>
                       )}
+                    </div>
+                    {/* View full page footer */}
+                    <div 
+                      className="p-3 border-t border-slate-100 bg-slate-50 text-center cursor-pointer hover:bg-slate-100 transition-colors"
+                      onClick={() => {
+                        setShowNotifications(false);
+                        navigate(`/${userInfo?.id}/notifications`);
+                      }}
+                    >
+                      <span className="text-[11px] font-bold tracking-widest uppercase text-[#7b68ee]">View all notifications</span>
                     </div>
                   </div>
                 )}

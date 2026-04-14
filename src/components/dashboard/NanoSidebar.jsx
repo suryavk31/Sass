@@ -35,7 +35,9 @@ const NanoSidebar = () => {
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
 
     const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
+    const [quickAddOpen, setQuickAddOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const quickAddRef = useRef(null);
     const workspaceList = useSelector((state) => state.workspace);
     const { workspaces, userRole } = workspaceList || {};
     const [activeWorkspace, setActiveWorkspace] = useState(null);
@@ -69,6 +71,9 @@ const NanoSidebar = () => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setWsDropdownOpen(false);
+            }
+            if (quickAddRef.current && !quickAddRef.current.contains(event.target)) {
+                setQuickAddOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -188,10 +193,43 @@ const NanoSidebar = () => {
                 </button>
 
                 {/* Global Add */}
-                <button className="w-10 h-10 flex items-center justify-center rounded-xl text-[#7b68ee] hover:bg-[#7b68ee]/20 transition-all group relative mb-4 bg-[#7b68ee]/10">
-                    <AddBoxRounded sx={{ fontSize: 22 }} />
-                    <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-all translate-x-[-4px] group-hover:translate-x-0 shadow-xl border border-white/10">Create Task</div>
-                </button>
+                <div className="relative z-[110]" ref={quickAddRef}>
+                    <button 
+                        onClick={() => setQuickAddOpen(!quickAddOpen)}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all group relative mb-4 ${quickAddOpen ? 'bg-[#7b68ee] text-white shadow-lg shadow-purple-500/40 transform scale-110' : 'text-[#7b68ee] bg-[#7b68ee]/10 hover:bg-[#7b68ee]/20 hover:scale-105'}`}
+                    >
+                        <AddBoxRounded sx={{ fontSize: 22 }} />
+                        {!quickAddOpen && <div className="absolute left-14 bg-slate-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-all translate-x-[-4px] group-hover:translate-x-0 shadow-xl border border-white/10 uppercase tracking-widest">Quick Create</div>}
+                    </button>
+
+                    {quickAddOpen && (
+                        <div className="absolute top-0 left-14 w-56 bg-slate-800 border border-white/10 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] py-3 overflow-hidden transform origin-left transition-all z-[120] animate-in slide-in-from-left-2 fade-in duration-200">
+                            <div className="px-4 pb-2 mb-2 border-b border-white/5">
+                                <p className="text-[10px] font-black tracking-[0.2em] uppercase text-slate-500">Global Add</p>
+                            </div>
+                            <div className="flex flex-col gap-1 px-2">
+                                {[
+                                    { label: 'New Lead', icon: ContactPageRounded, path: `/${userId}/leads`, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+                                    { label: 'New Deal', icon: TrendingUpRounded, path: `/${userId}/pipeline`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                                    { label: 'New Invoice', icon: ReceiptLongRounded, path: `/${userId}/invoices`, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+                                    { label: 'New Space', icon: FolderSpecialRounded, path: `/${userId}/projects`, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+                                    { label: 'New Team', icon: GroupsRounded, path: `/${userId}/employee`, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+                                ].map((action, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => { setQuickAddOpen(false); navigate(action.path); }}
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all group/item text-left"
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${action.bg} ${action.color} group-hover/item:scale-110 transition-transform`}>
+                                            <action.icon sx={{ fontSize: 18 }} />
+                                        </div>
+                                        <span className="text-[13px] font-bold text-slate-300 group-hover/item:text-white transition-colors tracking-tight">{action.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <div className="w-8 h-[1px] bg-white/5 mb-2"></div>
 

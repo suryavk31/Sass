@@ -42,7 +42,7 @@ const HeroSection = () => {
             <div className="rounded-[1.5rem] overflow-hidden bg-slate-100">
               <img
                 src="https://ik.imagekit.io/oiuyqhecp/Landing%20page/hero.jpg?updatedAt=1741796135122"
-                alt="TaskFlow Dashboard"
+                alt="Bivith Dashboard"
                 className="w-full h-auto"
               />
             </div>

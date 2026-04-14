@@ -15,10 +15,25 @@ import {
   ROLE_DELETE_FAIL,
 } from '../constants/roleConstants';
 
-export const listRoles = () => async (dispatch) => {
+export const listRoles = () => async (dispatch, getState) => {
   try {
     dispatch({ type: ROLE_LIST_REQUEST });
-    const { data } = await api.get('/api/roles'); // Note: added /api/ prefix to match typical backend routes
+    const state = getState();
+    const { workspace: { workspaces } } = state;
+    const activeWorkspace = workspaces?.[0] || {};
+
+    // Multi-source workspaceId resolution - avoid sending undefined
+    const workspaceId = activeWorkspace.id 
+      || activeWorkspace._id 
+      || state.user?.userInfo?.workspaceId;
+
+    // Guard: do not fire the request if workspaceId is still not resolved
+    if (!workspaceId || workspaceId === 'undefined') {
+      dispatch({ type: ROLE_LIST_FAIL, payload: 'Workspace not loaded yet' });
+      return;
+    }
+
+    const { data } = await api.get(`/api/roles?workspaceId=${workspaceId}`);
     dispatch({ type: ROLE_LIST_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: ROLE_LIST_FAIL, payload: error.response?.data?.message || error.message });
@@ -32,6 +47,7 @@ export const createRole = (roleData) => async (dispatch) => {
     dispatch({ type: ROLE_CREATE_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: ROLE_CREATE_FAIL, payload: error.response?.data?.message || error.message });
+    throw error;
   }
 };
 
@@ -42,6 +58,7 @@ export const updateRole = (id, roleData) => async (dispatch) => {
     dispatch({ type: ROLE_UPDATE_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: ROLE_UPDATE_FAIL, payload: error.response?.data?.message || error.message });
+    throw error;
   }
 };
 
@@ -52,5 +69,17 @@ export const deleteRole = (id) => async (dispatch) => {
     dispatch({ type: ROLE_DELETE_SUCCESS, payload: id });
   } catch (error) {
     dispatch({ type: ROLE_DELETE_FAIL, payload: error.response?.data?.message || error.message });
+    throw error;
+  }
+};
+
+// ─── Role Templates ──────────────────────────────────────────────────────────
+export const fetchRoleTemplates = () => async (dispatch) => {
+  try {
+    const { data } = await api.get('/api/role-templates');
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch role templates', error);
+    return [];
   }
 };

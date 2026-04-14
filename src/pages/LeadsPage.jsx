@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import {
@@ -20,6 +20,7 @@ import {
     TableRowsRounded
 } from '@mui/icons-material';
 import LeadsPipeline from '../components/leads/LeadsPipeline';
+import ActivityTimeline from '../components/dashboard/ActivityTimeline';
 import toast from 'react-hot-toast';
 
 const LeadsPage = () => {
@@ -30,15 +31,18 @@ const LeadsPage = () => {
     const [search, setSearch] = useState('');
     const [selectedWorkspace, setSelectedWorkspace] = useState('');
     const [viewMode, setViewMode] = useState('pipeline');
+    
+    // Timeline state
+    const [timelineLead, setTimelineLead] = useState(null);
 
+    const { userInfo } = useSelector((state) => state.user || {});
     const workspaceList = useSelector((state) => state.workspace);
     const { workspaces, userRole } = workspaceList;
     const isAdmin = userRole?.roleName === 'Admin';
     const permissions = userRole?.permissions || [];
     const canEdit = isAdmin || permissions.find(p => p.module === 'Leads')?.edit;
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is now automatically handled by axiosInstance interceptors.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -54,9 +58,10 @@ const LeadsPage = () => {
     }, [workspaces, selectedWorkspace]);
 
     const fetchLeads = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
-            const { data } = await axios.get(`/api/leads?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/leads?workspaceId=${workspaceId}`);
             setLeads(data);
         } catch (error) {
             console.error(error);
@@ -66,7 +71,7 @@ const LeadsPage = () => {
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-            await axios.put(`/api/leads/${id}/status`, { status: newStatus }, authConfig);
+            await axios.put(`/api/leads/${id}/status`, { status: newStatus });
             fetchLeads(selectedWorkspace);
         } catch (error) {
             console.error(error);
@@ -310,7 +315,11 @@ const LeadsPage = () => {
                                                 </>
                                             )}
                                         </div>
-                                        <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 group-hover:hidden transition-all">
+                                        <button 
+                                            onClick={() => setTimelineLead(lead)}
+                                            title="View Timeline"
+                                            className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 group-hover:text-[#7b68ee] transition-all"
+                                        >
                                             <MoreVertRounded sx={{ fontSize: 20 }} />
                                         </button>
                                     </td>
@@ -335,6 +344,17 @@ const LeadsPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Global Timeline Overlay */}
+            {timelineLead && (
+                <ActivityTimeline 
+                    entityType="Lead" 
+                    entityId={timelineLead.id} 
+                    entityName={`${timelineLead.firstName} ${timelineLead.lastName}`} 
+                    workspaceId={selectedWorkspace}
+                    onClose={() => setTimelineLead(null)} 
+                />
+            )}
         </div>
     );
 };

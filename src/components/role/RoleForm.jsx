@@ -18,10 +18,10 @@ const RoleForm = ({ onSubmit, isSubmitting }) => {
     // to backend structure: [ { module: "moduleName", create: bool, edit: bool, view: bool, delete: bool } ]
     const permissionsArray = Object.keys(permissions).map(moduleName => ({
       module: moduleName,
-      create: !!permissions[moduleName]?.Create,
-      edit: !!permissions[moduleName]?.Edit,
-      delete: !!permissions[moduleName]?.Delete,
-      view: !!permissions[moduleName]?.View,
+      create: !!permissions[moduleName]?.create,
+      edit: !!permissions[moduleName]?.edit,
+      delete: !!permissions[moduleName]?.delete,
+      view: !!permissions[moduleName]?.view,
     }));
     onSubmit({ name: roleName, permissions: permissionsArray });
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import { 
@@ -20,11 +20,11 @@ const CRMPage = () => {
     const [loading, setLoading] = useState(false);
     const [selectedWorkspace, setSelectedWorkspace] = useState('');
 
+    const { userInfo } = useSelector((state) => state.user || {});
     const workspaceList = useSelector((state) => state.workspace);
     const { workspaces } = workspaceList;
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is handled automatically by axiosInstance interceptors
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -39,11 +39,12 @@ const CRMPage = () => {
     }, [workspaces, selectedWorkspace]);
 
     const fetchData = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
             const [statsRes, perfRes] = await Promise.all([
-                axios.get(`/api/crm/stats?workspaceId=${workspaceId}`, authConfig),
-                axios.get(`/api/crm/employee-performance?workspaceId=${workspaceId}`, authConfig)
+                axios.get(`/api/crm/stats?workspaceId=${workspaceId}`),
+                axios.get(`/api/crm/employee-performance?workspaceId=${workspaceId}`)
             ]);
             setCrmStats(statsRes.data);
             setPerformance(perfRes.data);

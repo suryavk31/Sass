@@ -24,7 +24,7 @@ const CTASection = () => {
           </h2>
 
           <p className="text-xl text-brand-100 font-medium mb-12 max-w-2xl mx-auto leading-relaxed">
-            Stop juggling tools and start shipping. TaskFlow gives you the unified visibility and control needed to scale without friction.
+            Stop juggling tools and start shipping. Bivith gives you the unified visibility and control needed to scale without friction.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

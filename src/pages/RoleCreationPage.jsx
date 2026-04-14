@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createRole } from "../actions/roleActions";
 import { useNavigate } from "react-router-dom";
 import RoleForm from "../components/role/RoleForm";
@@ -11,11 +11,14 @@ const RoleCreationPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  const { workspaces } = useSelector((state) => state.workspace);
+  const activeWorkspace = workspaces?.[0] || {};
+
   const handleSubmit = async (roleData) => {
     setIsLoading(true);
     setErrorMessage(null); // Clear previous errors
     try {
-      await dispatch(createRole(roleData));
+      await dispatch(createRole({ ...roleData, workspaceId: activeWorkspace.id || activeWorkspace._id }));
       toast.success("Role created successfully!");
       navigate("/roles");
     } catch (error) {

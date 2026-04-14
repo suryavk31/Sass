@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import { AddRounded, EditRounded, DeleteRounded, PersonRounded, MoreVertRounded, GroupRounded } from '@mui/icons-material';
@@ -22,8 +22,7 @@ const ContactsPage = () => {
 
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState('');
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is handled automatically by axiosInstance.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -39,9 +38,10 @@ const ContactsPage = () => {
     }, [workspaces, currentWorkspaceId]);
 
     const fetchContacts = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
-            const { data } = await axios.get(`/api/contacts?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/contacts?workspaceId=${workspaceId}`);
             setContacts(data);
         } catch (error) {
             console.error(error);
@@ -56,7 +56,7 @@ const ContactsPage = () => {
             await axios.post('/api/contacts', {
                 ...formData,
                 workspaceId: currentWorkspaceId
-            }, authConfig);
+            });
             fetchContacts(currentWorkspaceId);
             setShowModal(false);
             setFormData({ firstName: '', lastName: '', email: '', phone: '', company: '', jobTitle: '', lifecycleStage: 'Lead' });
@@ -69,7 +69,7 @@ const ContactsPage = () => {
     const handleDelete = async (id) => {
         if(window.confirm('Are you sure you want to delete this contact?')) {
             try {
-                await axios.delete(`/api/contacts/${id}`, authConfig);
+                await axios.delete(`/api/contacts/${id}`);
                 fetchContacts(currentWorkspaceId);
             } catch (error) {
                 console.error(error);

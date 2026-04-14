@@ -20,9 +20,29 @@ axiosInstance.interceptors.request.use(
   (config) => {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+      
+      // 1. Attach Bearer Token
       if (userInfo?.token) {
         config.headers.Authorization = `Bearer ${userInfo.token}`;
       }
+
+      // 2. Attach Workspace Context (Standardizes RBAC across all modules)
+      if (userInfo?.workspaceId) {
+        config.headers['x-workspace-id'] = userInfo.workspaceId;
+      }
+
+      // 3. Global Request Sanitization
+      // Detect and strip literal "undefined" or "null" strings from the URL 
+      // often caused by malformed frontend state construction.
+      if (config.url && (config.url.includes('workspaceId=undefined') || config.url.includes('workspaceId=null'))) {
+        config.url = config.url
+          .replace(/workspaceId=undefined&?/g, '')
+          .replace(/&workspaceId=undefined/g, '')
+          .replace(/workspaceId=null&?/g, '')
+          .replace(/&workspaceId=null/g, '')
+          .replace(/\?$/, ''); // Clean up trailing question marks
+      }
+
     } catch (_) {
       // Ignore parse errors
     }

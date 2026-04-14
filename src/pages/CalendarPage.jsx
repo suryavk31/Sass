@@ -6,7 +6,8 @@ import CalendarView from '../components/calendar/CalendarView';
 import UpcomingEvents from '../components/calendar/UpcomingEvents';
 import KeyboardShortcuts from '../components/calendar/KeyboardShortcuts';
 import toast from 'react-hot-toast';
-import { AddRounded, CloseRounded } from '@mui/icons-material';
+import { AddRounded, CloseRounded, VideocamRounded } from '@mui/icons-material';
+import axios from '../utils/axiosInstance';
 
 const CalendarPage = () => {
     const [view, setView] = useState('month');
@@ -14,6 +15,10 @@ const CalendarPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', description: '' });
     const [saving, setSaving] = useState(false);
+
+    // External DB entities mapped to Calendar
+    const [tasks, setTasks] = useState([]);
+    const [deals, setDeals] = useState([]);
 
     const dispatch = useDispatch();
     const calendarList = useSelector((state) => state.calendar);
@@ -25,9 +30,24 @@ const CalendarPage = () => {
     const permissions = userRole?.permissions || [];
     const canCreate = isAdmin || permissions.find(p => p.module === 'Calendar')?.create;
 
+    const fetchExternalSources = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
+        try {
+            const [tasksRes, dealsRes] = await Promise.all([
+                axios.get(`/api/tasks?workspaceId=${workspaceId}`),
+                axios.get(`/api/sales/filtered-deals?workspaceId=${workspaceId}`)
+            ]);
+            setTasks(tasksRes.data);
+            setDeals(dealsRes.data);
+        } catch (error) {
+            console.error("Failed fetching external events for calendar", error);
+        }
+    };
+
     useEffect(() => {
         if (workspaceId) {
             dispatch(listEvents(workspaceId));
+            fetchExternalSources(workspaceId);
         }
     }, [dispatch, workspaceId]);
 
@@ -84,11 +104,55 @@ const CalendarPage = () => {
         }
     };
 
-    const formattedEvents = (events || []).map(e => ({
+    const handleEventDrop = async ({ event, start, end }) => {
+        // authConfig is handled automatically by axiosInstance.
+        
+        try {
+            if (event.sourceType === 'TASK') {
+                await axios.put(`/api/tasks/${event.id}`, { dueDate: start });
+                setTasks(tasks.map(t => t.id === event.id ? { ...t, dueDate: start } : t));
+                toast.success('Task deadline updated');
+            } else if (event.sourceType === 'DEAL') {
+                await axios.put(`/api/sales/deals/${event.id}`, { closingDate: start });
+                setDeals(deals.map(d => d.id === event.id ? { ...d, closingDate: start } : d));
+                toast.success('Deal closing date updated');
+            } else {
+                await axios.put(`/api/calendar/${event.id}`, { start, end });
+                dispatch(listEvents(workspaceId));
+                toast.success('Meeting rescheduled');
+            }
+        } catch (error) {
+            toast.error("Failed to reschedule");
+        }
+    };
+
+    const formattedCalendarEvents = (events || []).map(e => ({
         ...e,
         start: new Date(e.start),
         end: new Date(e.end || e.start),
+        sourceType: 'CALENDAR',
+        draggable: true
     }));
+
+    const formattedTaskEvents = tasks.filter(t => t.dueDate).map(t => ({
+        ...t,
+        title: `Task: ${t.title}`,
+        start: new Date(t.dueDate),
+        end: new Date(t.dueDate),
+        sourceType: 'TASK',
+        draggable: true
+    }));
+
+    const formattedDealEvents = deals.filter(d => d.closingDate).map(d => ({
+        ...d,
+        title: `Deal Closing: ${d.title}`,
+        start: new Date(d.closingDate),
+        end: new Date(d.closingDate),
+        sourceType: 'DEAL',
+        draggable: true
+    }));
+
+    const allFormattedEvents = [...formattedCalendarEvents, ...formattedTaskEvents, ...formattedDealEvents];
 
     return (
         <div className="flex-1 flex flex-col bg-[#fafbff] h-full overflow-hidden">
@@ -117,18 +181,19 @@ const CalendarPage = () => {
                         <div className="flex-1 flex items-center justify-center text-red-400 text-sm font-bold">{error}</div>
                     ) : (
                         <CalendarView
-                            events={formattedEvents}
+                            events={allFormattedEvents}
                             view={view}
                             date={date}
                             onNavigate={setDate}
                             onView={setView}
+                            onEventDrop={handleEventDrop}
                         />
                     )}
                 </div>
 
                 {/* Sidebar */}
                 <div className="w-[280px] shrink-0 flex flex-col gap-4 overflow-y-auto thin-scrollbar">
-                    <UpcomingEvents events={formattedEvents} onAddEvent={() => canCreate ? setShowModal(true) : toast.error('Permission denied')} />
+                    <UpcomingEvents events={allFormattedEvents} onAddEvent={() => canCreate ? setShowModal(true) : toast.error('Permission denied')} />
                     <KeyboardShortcuts />
                 </div>
             </div>
@@ -198,14 +263,17 @@ const CalendarPage = () => {
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">Description</label>
-                                <textarea
-                                    value={newEvent.description}
-                                    onChange={e => setNewEvent({...newEvent, description: e.target.value})}
-                                    className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-slate-300 focus:border-[#7b68ee] focus:bg-white outline-none transition-all resize-none"
-                                    rows="2"
-                                    placeholder="Optional notes…"
-                                />
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2">Description / Meeting Link</label>
+                                <div className="relative">
+                                    <VideocamRounded sx={{ fontSize: 18 }} className="absolute left-3 top-3.5 text-[#7b68ee]" />
+                                    <textarea
+                                        value={newEvent.description}
+                                        onChange={e => setNewEvent({...newEvent, description: e.target.value})}
+                                        className="w-full bg-slate-50 border-2 border-transparent rounded-2xl pl-10 pr-4 py-3 text-sm font-semibold text-slate-800 placeholder:text-slate-300 focus:border-[#7b68ee] focus:bg-white outline-none transition-all resize-none"
+                                        rows="2"
+                                        placeholder="Add Zoom/Google Meet links or notes…"
+                                    />
+                                </div>
                             </div>
 
                             <div className="flex items-center justify-between gap-3 pt-2">

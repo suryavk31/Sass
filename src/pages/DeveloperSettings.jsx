@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosInstance';
 import { useSelector, useDispatch } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import toast from 'react-hot-toast';
@@ -21,8 +21,7 @@ const DeveloperSettings = () => {
     const permissions = userRole?.permissions || [];
     const canEdit = isAdmin || permissions.find(p => p.module === 'workspace')?.edit;
 
-    const token = localStorage.getItem('token');
-    const authConfig = { headers: { Authorization: `Bearer ${token}` } };
+    // authConfig is handled automatically by axiosInstance.
 
     useEffect(() => {
         dispatch(listWorkspaces());
@@ -40,9 +39,10 @@ const DeveloperSettings = () => {
     }, [workspaces, selectedWorkspace]);
 
     const fetchKeys = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLoading(true);
         try {
-            const { data } = await axios.get(`/api/api-keys?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/api-keys?workspaceId=${workspaceId}`);
             setKeys(data);
         } catch (error) {
             console.error(error);
@@ -51,9 +51,10 @@ const DeveloperSettings = () => {
     };
 
     const fetchWebhookLogs = async (workspaceId) => {
+        if (!workspaceId || workspaceId === 'undefined') return;
         setLogsLoading(true);
         try {
-            const { data } = await axios.get(`/api/webhooks/logs?workspaceId=${workspaceId}`, authConfig);
+            const { data } = await axios.get(`/api/webhooks/logs?workspaceId=${workspaceId}`);
             setWebhookLogs(data || []);
         } catch (error) {
             console.error("Failed to fetch webhook logs");
@@ -63,7 +64,7 @@ const DeveloperSettings = () => {
 
     const handleRetryWebhook = async (id) => {
         try {
-            await axios.post(`/api/webhooks/logs/${id}/retry`, {}, authConfig);
+            await axios.post(`/api/webhooks/logs/${id}/retry`, {});
             toast.success("Webhook retried successfully");
             fetchWebhookLogs(selectedWorkspace);
         } catch (error) {
@@ -75,7 +76,7 @@ const DeveloperSettings = () => {
     const handleGenerateKey = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await axios.post('/api/api-keys', { name: keyName, workspaceId: selectedWorkspace }, authConfig);
+            const { data } = await axios.post('/api/api-keys', { name: keyName, workspaceId: selectedWorkspace });
             setNewKeyData(data);
             setKeyName('');
             fetchKeys(selectedWorkspace);
@@ -88,7 +89,7 @@ const DeveloperSettings = () => {
     const handleRevokeKey = async (id) => {
         if (window.confirm('Are you sure you want to revoke this API Key? Any integrations using it will immediately break.')) {
             try {
-                await axios.delete(`/api/api-keys/${id}`, authConfig);
+                await axios.delete(`/api/api-keys/${id}`);
                 fetchKeys(selectedWorkspace);
             } catch (error) {
                 console.error(error);

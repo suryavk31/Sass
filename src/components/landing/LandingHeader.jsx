@@ -9,10 +9,7 @@ const LandingHeader = () => {
         <div className="bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl px-6 py-3 flex items-center justify-between shadow-glass">
           <div className="flex items-center gap-12">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 premium-gradient rounded-lg flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <i className="fas fa-rocket text-white text-xs"></i>
-              </div>
-              <span className="text-xl font-extrabold text-slate-900 tracking-tight">TaskFlow</span>
+              <img src="/logo.png" alt="Bivith" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
             </Link>
             <div className="hidden md:flex items-center space-x-1">
               {['Features', 'Pricing', 'Integrations'].map((item) => (

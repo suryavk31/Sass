@@ -4,8 +4,7 @@ import { Outlet, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { listWorkspaces } from '../actions/workspaceActions';
 import { listProjects } from '../actions/projectActions';
-import NanoSidebar from './dashboard/NanoSidebar';
-import ContextSidebar from './dashboard/ContextSidebar';
+import Sidebar from './dashboard/Sidebar';
 import Header from './dashboard/Header';
 
 const DashboardLayout = () => {
@@ -29,11 +28,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="h-screen flex bg-[#f8fafc] overflow-hidden text-slate-900 font-sans">
-      {/* 1. Nano Sidebar (Dark, Leftmost) */}
-      <NanoSidebar />
-
-      {/* 2. Context Sidebar (Light, Collapsible) */}
-      <ContextSidebar />
+      <Sidebar />
 
       {/* 3. Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-white shadow-[inset_1px_0_0_0_rgba(0,0,0,0.05)] overflow-hidden">
